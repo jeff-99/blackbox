@@ -32,7 +32,7 @@ def main(vf,df,o, c):
         filename = vf
         output_filename = '{}-{}_tmp.avi'.format(o,i)
         output_files.append(output_filename)
-    #
+
         print("Start processing {} -> {}, from frame {} to frame {}".format(filename,output_filename,batch[0],batch[1]))
         p = multiprocessing.Process(target=process_frames, args=(filename,output_filename,df,batch[0],batch[1]))
         processes.append(p)

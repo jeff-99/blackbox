@@ -162,6 +162,7 @@ def remap( x, oldMinimum, oldMaximum, newMinimum, newMaximum ):
 
     return int(result)
 
+
 class LeanAngleWidget(Widget):
     def __init__(self, angles, speeds):
         self.angles = angles

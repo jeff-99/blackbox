@@ -1,14 +1,12 @@
 import cv2
 import sys
-from .datafetcher import DataFetcher
-from .divider import MeasurementDivider
+from .data import get_measurements_from_file, MeasurementDivider
 from .widgets import OptimizedMapWidget, MapWidget, LeanAngleWidget2, TimerWidget, Widget
 
 
 class Video(object):
     def __init__(self, filepath):
         self.filepath = filepath
-        # self.widgets = []
 
         self.cap = cv2.VideoCapture(filepath)
 
@@ -19,40 +17,11 @@ class Video(object):
 
         self.codec = int(self.cap.get(cv2.CAP_PROP_FOURCC))
 
-    # def add_widget(self,widget,position):
-    #     if isinstance(widget,Widget):
-    #         widget.set_fps(self.fps)
-    #         widget.set_total_frame_count(self.frames)
-    #         widget.set_pos(position)
-    #         self.widgets.append(widget)
-
-    # def get_frames(self,start = None,end = None):
-    #     start = start or 0
-    #     end = end or self.frames
-    #
-    #     self.cap.set(cv2.CAP_PROP_POS_FRAMES,start)
-    #     for i in range(start,end):
-    #         flag, frame = self.cap.read()
-    #
-    #         overlay = frame.copy()
-    #
-    #         for widget in self.widgets:
-    #             widget.draw(i, frame)
-    #
-    #         sys.stdout.write('\r')
-    #         sys.stdout.write("rendering frame: " + str(i+1) + " / " + str(self.frames))
-    #         sys.stdout.flush()
-    #
-    #         # cv2.addWeighted(overlay,0.5,frame,1-0.5,0,frame)
-    #
-    #         yield frame
-
     def set_current_frame(self,frame_number):
         self.cap.set(cv2.CAP_PROP_POS_FRAMES,frame_number)
 
     def read(self):
         return self.cap.read()
-
 
 
 class VideoProcessor(object):
@@ -104,42 +73,39 @@ def process_frames(filename, output_file, data_file, start_frame=None,end_frame=
 
     # print video.frames;exit()
 
+    data = get_measurements_from_file(data_file)
+
+    divider = MeasurementDivider(data, video.frames, video.fps)
+    mSet= divider.extract()
+
+    angles = mSet.get_angles()
+    speeds = mSet.get_speeds()
+    points = mSet.get_gps()
+
+    video_processor = VideoProcessor(video, start_frame,end_frame)
+
     map_height = 350
     map_y = int(video.height * 0.9) - map_height
 
     map_width = 350
     map_x = int(video.width*0.9) - map_width
 
-    data = DataFetcher(data_file)
-    # angles = data.get_angles()
-    # speeds = data.get_speeds()
-    # points = data.get_gps()
-
-    divider = MeasurementDivider(data.get_measurements(), video.frames, video.fps)
-    mSet= divider.extract()
-    angles = mSet.get_angles()
-
-    speeds = mSet.get_speeds()
-    points = mSet.get_gps()
-
-    video_processor = VideoProcessor(video, start_frame,end_frame)
-
     drawer = OptimizedMapWidget(video.fps,points)
-    # drawer = MapWidget(points)
     drawer.set_width(map_width)
     drawer.set_height(map_width)
+
     video_processor.add_widget(drawer,(map_x,map_y))
 
     leaner = LeanAngleWidget2(angles, speeds)
     leaner.set_height(200)
-    video_processor.add_widget(leaner, (int(video.width * 0.1),int(video.height * 0.9) - 250))
+
+    leaner_x = int(video.width * 0.1)         # 10% from left
+    leaner_y = int(video.height * 0.9) - 250  # 90% from top - 250 pixels
+
+    video_processor.add_widget(leaner, (leaner_x, leaner_y))
 
     # timer = TimerWidget()
     # video.add_widget(timer,(100,100))
-
-    # output_file = 'output/test3.avi'
-    # cv2.cv.CV_FOURCC('X', '2', '6', '4')
-    # cv2.VideoWriter_fourcc('X', '2', '6', '4')
 
     writer = cv2.VideoWriter(output_file,cv2.VideoWriter_fourcc('X', 'V', 'I', 'D'),video.fps,(video.width,video.height))
     for frame in video_processor.get_frames():
