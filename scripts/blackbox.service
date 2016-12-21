@@ -1,0 +1,14 @@
+[Unit]
+Description=Blackbox
+
+[Service]
+After=syslog.target
+After=network.target
+User=pi
+Group=pi
+Restart=always
+Environment=USER=piHOME=/home/pi
+ExecStart=/usr/local/bin/blackbox run -c /home/pi/config.yml
+
+[Install]
+WantedBy=multi-user.target

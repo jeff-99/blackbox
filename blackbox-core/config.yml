@@ -1,0 +1,26 @@
+gopro:
+    host: '10.5.5.9'
+    password: goprokevin1
+
+wifi:
+    ssid: alkd
+    password: tralal
+
+measurement:
+    adapters:
+      gps: MockGPSAdapter
+      orientation: MockOrientationAdapter
+
+output:
+  basepath: output/
+  format : '{}_results.csv'
+
+wsgi:
+  host: '127.0.0.1'
+  port: 5123
+
+flask:
+  DEBUG: true
+  SECRET_KEY: asnoi34aaend
+  EXPLAIN_TEMPLATE_LOADING: false
+#  APPLICATION_ROOT: web/

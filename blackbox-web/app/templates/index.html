@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% import "macro/panel.html" as panel %}
+
+{% block header %}
+{{ super() }}
+<script type="text/javascript">
+    function initMap() {
+    var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 4
+    });
+}
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBusrHLxWqAXtzdlMCoIXxU_5OvS72CzIA&callback=initMap"></script>
+
+{% endblock %}
+
+{% block nav %}
+{{likker}}
+{% endblock %}
+
+{% block content %}
+{% call panel.panel('test', 'sub') %}
+ <h1> lulhuiler </h1>
+{% endcall %}
+
+ <div class="row">
+    <div class="col-md-6 col-sm-12 col-xs-12">
+      {% call panel.panel('test', 'sub') %}
+        <button class="refresh">refresh</button>
+        <div id="map" class="googlemap"></div>
+      {% endcall %}
+    </div>
+     <div class="col-md-6 col-sm-12 col-xs-12">
+        {% call panel.panel('test', 'sub') %}
+            <div class="event" data-stream="/stream">
+                <button id="stop">Stop!</button>
+                <p>GPS   : <span id="gps"></span></p>
+                <p>SPEED : <span id="speed"></span></p>
+                <p>LEAN  : <span id="angle"></span></p>
+            </div>
+        {% endcall %}
+  </div>
+</div>
+
+
+{% endblock %}

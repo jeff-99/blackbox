@@ -1,0 +1,59 @@
+<html>
+               <head>
+                   <style>
+       #map {
+        height: 400px;
+        width: 100%;
+       }
+    </style>
+                   <script>
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 4
+        });
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBusrHLxWqAXtzdlMCoIXxU_5OvS72CzIA&callback=initMap">
+    </script>
+               </head>
+               <body>
+                 <h1>Server sent events</h1>
+                 <div id="event"></div>
+                 <div id="map"></div>
+                 <button id="refresh">Refresh map</button>
+                 <script type="text/javascript">
+
+                 var eventOutputContainer = document.getElementById("event");
+                 var evtSrc = new EventSource("/stream");
+
+                 window.cur_pos = {};
+
+                 evtSrc.addEventListener('gps', function(e) {
+                     console.log(e.data);
+                     eventOutputContainer.innerHTML = e.data;
+
+                     data = e.data.split(',');
+                     console.log(data);
+                     window.cur_pos =  {lat:parseFloat(data[1]),lng:parseFloat(data[2])};
+
+
+
+
+                 });
+
+                 /* evtSrc.addEventListener('other',function(e){alert(e.data)});*/
+
+                 evtSrc.onerror = function(e){console.log('error');console.log(e);};
+                 evtSrc.onopen = function(e){console.log('open');console.log(e);};
+
+                 document.getElementById('refresh').onclick = function(e){
+                     var map = new google.maps.Map(document.getElementById('map'),{zoom:16,center:window.cur_pos});
+                     var marker = new google.maps.Marker({
+                      position: window.cur_pos,
+                      map: map
+                     });
+                  }
+                 </script>
+               </body>
+             </html>

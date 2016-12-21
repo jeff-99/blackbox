@@ -1,0 +1,9 @@
+*node_modules/
+*.egg-info/
+*output/
+*input/
+*vendors/
+.idea/
+
+
+*.pyc
