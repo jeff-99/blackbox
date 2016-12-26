@@ -3,6 +3,7 @@ from multiprocessing import Manager
 from .process import WebProcess, MeasurementProcess
 from .util import health_check
 from threading import Thread, Event
+import signal
 
 logger = multiprocessing.log_to_stderr(logging.INFO)
 
@@ -31,6 +32,9 @@ def cli():
 @cli.command('run')
 @click.option("-c", default=os.path.join(os.getcwd(),"config.yml"))
 def main(c):
+    handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGTERM, handler)
+
     sharedData = create_manager(c)
 
     processes = [
