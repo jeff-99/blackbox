@@ -1,5 +1,6 @@
 [Unit]
 Description=Blackbox
+Requires=gpsd.service
 
 [Service]
 After=syslog.target
