@@ -15,12 +15,11 @@ setup(
     include_package_data=True,
     install_requires= [
         "click",
-        "flask",
-        "gevent",
         "Rpi.GPIO",
         "gpsd-py3",
         "gpxpy",
         "wireless",
+        "pyYAML"
     ],
     entry_points={
         'console_scripts': [
