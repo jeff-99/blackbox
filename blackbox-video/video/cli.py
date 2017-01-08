@@ -26,12 +26,12 @@ def main(vf,df,o, c):
     print("batches")
     print(frame_batches)
 
+    post = PostProcessor(o,vf)
+
     processes =[]
-    output_files =[]
     for i,batch in enumerate(frame_batches):
         filename = vf
-        output_filename = '{}-{}_tmp.avi'.format(o,i)
-        output_files.append(output_filename)
+        output_filename = post.register_new_videofile()
 
         print("Start processing {} -> {}, from frame {} to frame {}".format(filename,output_filename,batch[0],batch[1]))
         p = multiprocessing.Process(target=process_frames, args=(filename,output_filename,df,batch[0],batch[1]))
@@ -41,8 +41,7 @@ def main(vf,df,o, c):
     for i,p in enumerate(processes):
         p.join()
 
-    post = PostProcessor(vf,output_files)
-    post.process(o)
+    post.process()
 
     end = time.time()
 

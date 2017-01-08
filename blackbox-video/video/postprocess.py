@@ -1,69 +1,136 @@
-import subprocess, sys, os
+import subprocess
+import sys
 import uuid
 import os
-import glob
+import shutil
 
 
 class PostProcessor(object):
-    def __init__(self, original_file_path ,new_file_path):
-        self.original_file_path = original_file_path
-        self.new_file_path = new_file_path
+    def __init__(self, output_file,original_file_path):
+        self.output_file = output_file
+        self.generated_video_files = []
 
+        self.original_file_path = os.path.abspath(original_file_path)
+        self.new_file_path = None
+
+        # init an output directory where all processing will take place
+        self.output_dir = 'output'
+        working_dir = os.path.join(os.getcwd(), self.output_dir)
+        if not os.path.isdir(working_dir):
+            os.mkdir(working_dir)
+
+        self.original_working_dir = os.getcwd()
+
+    def generate_videofile_path(self, index):
+        """
+        Generate a temporary location to use for processing a part of the video
+        :param index:
+        :return:
+        """
+        filename = '{}-{}_tmp.avi'.format(self.output_file,index)
+        path = os.path.join(self.output_dir,filename)
+        return path
+
+    def register_new_videofile(self):
+        """
+        Register an new temporary video file location
+        and return the generated filepath
+        :return:
+        """
+        index = len(self.generated_video_files)
+
+        filename = self.generate_videofile_path(index)
+        self.generated_video_files.append(os.path.basename(filename))
+
+        return filename
 
     def get_new_file_path(self):
-        if isinstance(self.new_file_path,list):
-            filename = self._merge_files(self.new_file_path)
+        """
+        Create a new merged file if there are multiple output files
+        :return:
+        """
+        if len(self.generated_video_files) > 0:
+            filename = self._merge_files()
             self.new_file_path = filename
 
         return self.new_file_path
 
-    @staticmethod
-    def _merge_files(filepaths):
+    def _merge_files(self):
+        """
+        Merge registered videofiles into a single video file and return the filepath of the merged file
+        :return:
+        """
+        # change working directory to the temporary directory
+        # because the ffmpeg call won't work with files in a separate directory
+        os.chdir(self.output_dir)
+
         with open('files.tmp.txt','w') as f:
-            for fp in filepaths:
+            for fp in self.generated_video_files:
                 f.write("file '{}'\n".format(fp))
 
         filename = "{}.tmp.mp4".format(uuid.uuid1().hex)
         command = "ffmpeg -y -f concat -i files.tmp.txt -c copy {}".format(filename)
+        self._execute_command(command)
 
-        subprocess.call(command,stdout=sys.stdout, stderr=sys.stderr,cwd=os.getcwd(),shell=True)
+        # and reset the original working directory
+        os.chdir(self.original_working_dir)
 
-        return filename
+        # filepath relative to the original working directory
+        filepath = os.path.join(self.output_dir, filename)
+
+        return filepath
 
     def get_audio_file(self):
+        """
+        Extract the audio from the original video file so we can merge it with the newly created video file
+        :return:
+        """
         audio_filename = self.original_file_path.rsplit('.',1)[0] + ".mp3"
-        # if not os.path.exists(audio_filename):
+
         command = 'ffmpeg -y -i {0} {1}'.format(self.original_file_path, audio_filename)
-        subprocess.call(command,stdout=sys.stdout, stderr=sys.stderr,cwd=os.getcwd(),shell=True)
+        self._execute_command(command)
 
         return audio_filename
 
-    @staticmethod
-    def get_merged_file(audio_file, video_file, output_file):
-        # output_file = "output/testing_{}.mp4".format(uuid.uuid4().hex)
-        # if not os.path.exists(output_file):
-        # command = 'ffmpeg -y -i {} -i {} -map 0:0 -map 1:0 -vcodec copy -acodec copy -absf aac_adtstoasc {}'.format(video_file, audio_file, output_file)
-        command = 'ffmpeg -y -i {} -i {} -c copy {}'.format(video_file, audio_file, output_file)
-        subprocess.call(command,stdout=sys.stdout, stderr=sys.stderr,cwd=os.getcwd(),shell=True)
+    def get_merged_file(self, audio_file, video_file):
+        """
+        Merge the audio file extracted from the original video and merge it with the newly created video file
+        and save it as the output_file
+        :param audio_file:
+        :param video_file:
+        :return:
+        """
+        command = 'ffmpeg -y -i {} -i {} -c copy {}'.format(video_file, audio_file, self.output_file)
+        self._execute_command(command)
 
-        return output_file
+        return self.output_file
 
     def cleanup_tempfiles(self):
-        for i in glob.glob('output/*.tmp*'):
-            os.remove(i)
+        """
+        remove the temporary output directory
+        :return:
+        """
+        shutil.rmtree(self.output_dir)
 
-        for i in glob.glob('*.tmp*'):
-            os.remove(i)
+    def process(self):
+        try:
+            audio_filepath = self.get_audio_file()
+            video_filepath = self.get_new_file_path()
 
-    def process(self, output_file):
-        video_filepath = self.get_new_file_path()
-        audio_filepath = self.get_audio_file()
+            self.get_merged_file(audio_filepath,video_filepath)
+        finally:
+            self.cleanup_tempfiles()
 
-        self.get_merged_file(audio_filepath,video_filepath, output_file)
-        # self.cleanup_tempfiles()
-
+    @staticmethod
+    def _execute_command(command):
+        """
+        Helper method to execute ffmpeg commands
+        :param command:
+        :return:
+        """
+        print("executing : ".format(command))
+        subprocess.call(command,stdout=sys.stdout, stderr=sys.stderr,cwd=os.getcwd(),shell=True)
 
 if __name__ == '__main__':
-    p = PostProcessor('input/00027.m4v', 'output/test3.avi')
-    p.process()
+    pass
 
