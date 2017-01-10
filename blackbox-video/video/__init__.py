@@ -1,7 +1,7 @@
 import cv2
 import sys
 from .data import get_measurements_from_file, MeasurementDivider
-from .widgets import OptimizedMapWidget, MapWidget, LeanAngleWidget2, TimerWidget, Widget
+from .widgets import OptimizedMapWidget, MapWidget, ReversedLeanAngleWidget, TimerWidget, Widget
 
 
 class Video(object):
@@ -45,7 +45,7 @@ class VideoProcessor(object):
         for i in range(self.start_frame,self.end_frame):
             flag, frame = self.video.read()
 
-            overlay = frame.copy()
+            # overlay = frame.copy()
 
             for widget in self.widgets:
                 widget.draw(i, frame)
@@ -96,7 +96,7 @@ def process_frames(filename, output_file, data_file, start_frame=None,end_frame=
 
     video_processor.add_widget(drawer,(map_x,map_y))
 
-    leaner = LeanAngleWidget2(angles, speeds)
+    leaner = ReversedLeanAngleWidget(angles, speeds)
     leaner.set_height(200)
 
     leaner_x = int(video.width * 0.1)         # 10% from left

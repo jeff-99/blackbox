@@ -301,8 +301,6 @@ class LeanAngleWidget(Widget):
         self.draw_angle(i, frame)
 
 
-
-
 class LeanAngleWidget2(LeanAngleWidget):
 
     def draw_angle(self, t, frame):
@@ -375,6 +373,49 @@ class LeanAngleWidget2(LeanAngleWidget):
 
             cv2.fillPoly(frame,np.int32([mapped_polygon]),color)
 
+
+class LeanAngleWidget3(LeanAngleWidget):
+    def draw_angle(self, t, frame):
+        shapes =[
+            (   # MOTORCYCLE
+                [0.9386666666666666 * self.radius, 0.9362666666666667 * self.radius, 0.9325333333333333 * self.radius, 0.9170666666666666 * self.radius, 0.8992 * self.radius, 0.8728 * self.radius, 0.876 * self.radius, 0.9074666666666666 * self.radius, 0.9448000000000001 * self.radius, 0.9669333333333334 * self.radius, 0.9853333333333333 * self.radius, 1.0082666666666666 * self.radius, 0.9653333333333334 * self.radius, 0.9474666666666667 * self.radius, 0.9311999999999999 * self.radius, 0.9133333333333333 * self.radius, 0.9008 * self.radius, 0.8909333333333334 * self.radius, 0.8898666666666666 * self.radius, 0.8674666666666667 * self.radius, 0.8514666666666667 * self.radius, 0.8314666666666667 * self.radius, 0.8151999999999999 * self.radius, 0.8146666666666667 * self.radius, 0.8106666666666666 * self.radius, 0.7741333333333333 * self.radius, 0.7674666666666667 * self.radius, 0.7725333333333333 * self.radius, 0.7549333333333333 * self.radius, 0.7066666666666667 * self.radius, 0.6026666666666667 * self.radius, 0.5978666666666667 * self.radius, 0.5453333333333333 * self.radius, 0.5055999999999999 * self.radius, 0.4266666666666667 * self.radius, 0.4496 * self.radius, 0.4234666666666667 * self.radius, 0.3904 * self.radius, 0.37013333333333337 * self.radius, 0.3450666666666667 * self.radius, 0.3208 * self.radius, 0.29333333333333333 * self.radius, 0.2672 * self.radius, 0.24586666666666668 * self.radius, 0.2192 * self.radius, 0.20293333333333333 * self.radius, 0.204 * self.radius, 0.23120000000000002 * self.radius, 0.3994666666666667 * self.radius, 0.40026666666666666 * self.radius, 0.08426666666666667 * self.radius, 0.07173333333333333 * self.radius, 0.04853333333333333 * self.radius, 0.032 * self.radius],
+                [0.0, -1.6299999999999955, -3.6099999999999994, -6.010000000000005, -9.040000000000006, -11.280000000000001, -12.799999999999997, -13.420000000000002, -13.879999999999995, -14.530000000000001, -16.67, -20.11, -20.540000000000006, -20.42, -19.58, -18.379999999999995, -17.040000000000006, -15.450000000000003, -13.870000000000005, -12.969999999999999, -12.299999999999997, -12.030000000000001, -12.849999999999994, -15.769999999999996, -23.870000000000005, -25.060000000000002, -24.430000000000007, -17.680000000000007, -17.47, -18.709999999999994, -22.83, -22.560000000000002, -24.560000000000002, -26.29, -25.989999999999995, -27.17, -26.57, -29.020000000000003, -29.340000000000003, -29.14, -27.200000000000003, -25.870000000000005, -27.33, -28.509999999999998, -31.560000000000002, -28.25, -25.560000000000002, -20.939999999999998, -11.159999999999997, -9.590000000000003, -55.3, -68.2, -80.53999999999999, -90.0],
+                (0,255,0)
+            ),
+            (   # HEADLIGHTS
+                [0.5928 * self.radius, 0.6581333333333333 * self.radius, 0.6946666666666667 * self.radius, 0.7594666666666667 * self.radius, 0.7088 * self.radius, 0.6554666666666666 * self.radius, 0.6306666666666667 * self.radius, 0.612 * self.radius, 0.5909333333333333 * self.radius, 0.5901333333333334 * self.radius],
+                [-2.819999999999993, -4.650000000000006, -7.939999999999998, -15.060000000000002, -16.39, -17.03, -15.450000000000003, -12.579999999999998, -8.819999999999993, -3.1099999999999994],
+                (255,255,255)
+            )
+        ]
+
+        for radii_right, angle_mods_right, color in shapes:
+            radii = self._complete_radii(radii_right)
+            angle_mods = self._complete_anglemods(angle_mods_right)
+
+            mapped_polygon = []
+
+            for i,r in enumerate(radii):
+                angle = self.angles[t] - 90
+                radius = r
+
+                angle = angle + angle_mods[i]
+
+                angle = math.radians(angle)
+
+                x = self.center[0] + (radius * math.cos(angle))
+                y = self.center[1] + (radius * math.sin(angle))
+
+                mapped_polygon.append((x,y))
+
+            cv2.fillPoly(frame,np.int32([mapped_polygon]),color)
+
+
+class ReversedLeanAngleWidget(LeanAngleWidget3):
+    def __init__(self,angles, speeds):
+        super(ReversedLeanAngleWidget, self).__init__(angles, speeds)
+        # reverse measurements by multipying by -1
+        self.angles = list(map(lambda x : x * -1, angles))
 
 class TimerWidget(Widget):
     def __init__(self):
